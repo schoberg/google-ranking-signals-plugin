@@ -1,0 +1,11 @@
+{
+  "name": "google-ranking-signals",
+  "description": "Google ranking signal analysis based on the 2024 Content Warehouse API leak. Audit pages, optimize content, and understand how Google actually ranks websites.",
+  "version": "0.1.0",
+  "author": {
+    "name": "schoberg"
+  },
+  "repository": "https://github.com/schoberg/google-ranking-signals-plugin",
+  "license": "MIT",
+  "keywords": ["seo", "google", "ranking", "navboost", "site-authority", "content-optimization", "audit"]
+}

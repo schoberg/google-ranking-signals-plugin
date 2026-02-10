@@ -27,8 +27,15 @@ This plugin gives Claude Code deep knowledge of Google's actual ranking signals 
 
 ## Installation
 
+**Command line (Claude Code CLI):**
 ```bash
-claude plugin add schoberg/google-ranking-signals-plugin
+claude plugin marketplace add schoberg/google-ranking-signals-plugin && claude plugin install google-ranking-signals
+```
+
+**Claude Code app:**
+```
+/plugin marketplace add schoberg/google-ranking-signals-plugin
+/plugin install google-ranking-signals
 ```
 
 ## Usage

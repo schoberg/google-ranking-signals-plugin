@@ -25,16 +25,20 @@ This plugin gives Claude Code deep knowledge of Google's actual ranking signals 
 | Special Treatments | Whitelists, YMYL treatments, penalty signals |
 | Ranking Architecture | Ascorer, Twiddlers, re-ranking pipeline |
 
-## Installation
+## Install
 
-**Command line (Claude Code CLI):**
+Run this from a terminal window (not inside a Claude Code session):
+
 ```bash
 claude plugin marketplace add schoberg/google-ranking-signals-plugin && claude plugin install google-ranking-signals
 ```
 
-**Claude Code app:**
+Or run these 2 commands in a Claude Code CLI session or the Claude Code app:
+
 ```
 /plugin marketplace add schoberg/google-ranking-signals-plugin
+```
+```
 /plugin install google-ranking-signals
 ```
 

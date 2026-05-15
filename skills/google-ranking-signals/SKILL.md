@@ -8,7 +8,7 @@ description: >
   or requests any SEO analysis grounded in Google's internal ranking systems.
   Provides comprehensive expertise based on the 2024 Google Content Warehouse API leak
   (2,596 modules, 14,014 attributes).
-version: 0.1.0
+version: 0.1.3
 ---
 
 # Google Ranking Signals — 2024 Leak Intelligence
@@ -48,7 +48,43 @@ For attribute-level lookup, consult `references/signal-catalog.md` — an alphab
 
 To audit a page against the leaked ranking signals:
 
-1. **Gather page data** — Fetch the target URL. Read its HTML, content, metadata, and structure. Note the title tag, headings, author byline, publish date, word count, and internal/external links.
+1. **Gather page data** — `<head>` data **and structured data anywhere on the page** must come from raw HTML. WebFetch converts HTML to markdown before its summarizer sees it, which strips `<meta>`, `<link>`, and `<script>` content (including `<script type="application/ld+json">` blocks, wherever they appear in the document). So WebFetch cannot reliably report on `<head>` *or* on JSON-LD structured data regardless of how the prompt is phrased. (Note: WebFetch *can* report on JSON-LD that appears as visible page content — e.g., code examples on schema.org's docs — but that's documentation, not real schema markup.)
+
+   **1a. Raw HTML for `<head>` (authoritative source)** — Run via Bash:
+
+   ```
+   curl -sL --compressed --max-time 10 -A 'Mozilla/5.0 (compatible; ClaudeCodeSEOAudit/1.0)' <url>
+   ```
+
+   Extract the `<head>...</head>` block and read it **verbatim** — every `<meta>`, `<link>`, `<title>`, and `<script src>` tag inside `<head>`.
+
+   **Search the entire document (not just `<head>`) for structured data**, because JSON-LD, microdata, and RDFa can appear in `<body>`:
+   - JSON-LD: `<script type="application/ld+json">...</script>` anywhere in the document
+   - Microdata: any tag with `itemscope`, `itemtype`, or `itemprop` attributes
+   - RDFa: any tag with `typeof`, `vocab`, or `property` attributes
+
+   Only report structured data as missing if all three formats are absent from the whole document.
+
+   Treat curl as **unusable for `<head>` analysis** if any of these are true:
+   - HTTP status is non-2xx
+   - Response body is under 1000 bytes
+   - The extracted `<head>` contains zero `<meta>` tags (indicates JS-rendered shell, bot challenge page, or stub — e.g., Cloudflare/Datadome/"Please wait...")
+   - Bash permission was declined or curl is unavailable
+
+   **1b. Visible content (WebFetch)** — Always use WebFetch for headings (H1/H2/H3), visible body content, author byline, publish date, word count, and link structure. Summarization is appropriate for this content.
+
+   **Critical rule — handling confidence for `<head>` and structured data in the final report:**
+   - **curl succeeded** → `<head>` findings AND structured data findings are authoritative. Report present/absent with confidence.
+   - **curl was unusable** → Do **not** report any `<head>` tag, JSON-LD block, microdata, or RDFa as "missing". Mark all `<head>`-derived AND structured-data findings as **"could not verify — raw HTML unavailable"**. Never substitute WebFetch for these — WebFetch strips both `<head>` content and `<script>` blocks during its markdown conversion. Diagnose the cause and tell the user how to recover (see Step 1d below).
+
+   **1d. When curl is unusable — diagnose and explain:** Identify the most likely cause from the curl output and body content, and include a "Why `<head>` couldn't be verified" section in the audit. **Most audits are own-site audits**, which opens up easier recovery paths (CMS/template inspection, allowlisting your own WAF, logged-in browser session). If you don't already know, ask: *"Is this your own site, or one you're auditing externally?"* and tailor the recovery suggestions accordingly. See `examples/page-audit-workflow.md` Step 1d for the full diagnostic table with both own-site and third-party recovery paths. Common causes:
+   - **Bot block (Cloudflare/Datadome/etc.)** — body contains "checking your browser", "Please wait", "cf-chl-bypass". Own site: allowlist your IP, fetch from origin, or paste `<head>` from DevTools. Third-party: retry with a browser UA, or paste view-source.
+   - **JS-rendered shell** — body has `<div id="root">`/`__NEXT_DATA__`/etc. with near-empty `<head>`. Own site: check the template/component building `<head>` (Next.js `<Head>`, React Helmet, Vue meta). Either: paste rendered `<head>` from DevTools Elements after page loads.
+   - **Auth/paywall** — body contains password input or login form. Either case: paste HTML from a logged-in browser session, or run curl with the session cookie.
+   - **HTTP error (4xx/5xx)** — report status code. Own site: check server logs/config. Either case: 401/403 → auth, 429 → rate limit, 451 → geoblock, 5xx → retry.
+   - **Bash declined / curl unavailable** — ask user to enable Bash permission or paste raw HTML.
+
+   Always include in the audit output a line stating which method supplied the `<head>` data, e.g., *"`<head>` source: curl (authoritative)"* or *"`<head>` source: unavailable — see 'Why `<head>` couldn't be verified' below"*.
 
 2. **Evaluate by signal category** — Walk through each category in the table above. For each, consult the corresponding reference file and check the page against the documented attributes. Key areas to assess:
    - Click-worthiness (title, meta description, SERP appearance)

@@ -11,7 +11,7 @@
       "name": "google-ranking-signals",
       "source": "./",
       "description": "Google ranking signal analysis based on the 2024 Content Warehouse API leak. Audit pages, optimize content, and understand how Google actually ranks websites.",
-      "version": "0.1.0",
+      "version": "0.1.3",
       "author": {
         "name": "schoberg"
       },
